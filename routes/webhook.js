@@ -8,8 +8,30 @@ const VALIDATION_TOKEN = process.env.VALIDATION_TOKEN;
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-  if (req.query['hub.mode'] === 'subscribe' &&
-    req.query['hub.verify_token'] === VALIDATION_TOKEN) {
+  let VERIFY_TOKEN = process.env.VERIFY_TOKEN
+
+  // Parse the query params
+  let mode = req.query['hub.mode'];
+  let token = req.query['hub.verify_token'];
+  let challenge = req.query['hub.challenge'];
+
+  // Checks if a token and mode is in the query string of the request
+  if (mode && token) {
+
+    // Checks the mode and token sent is correct
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+
+      // Responds with the challenge token from the request
+      console.log('WEBHOOK_VERIFIED');
+      res.status(200).send(challenge);
+
+    } else {
+      // Responds with '403 Forbidden' if verify tokens do not match
+      res.sendStatus(403);
+    }
+  }
+  else if (mode === 'subscribe' &&
+    token === VALIDATION_TOKEN) {
     console.log("Validating webhook");
     res.status(200).send(req.query['hub.challenge']);
   } else {
